@@ -1,5 +1,9 @@
 from helper import *
-
+import point
+import numpy as np
+from pathfinding.core.diagonal_movement import DiagonalMovement
+from pathfinding.core.grid import Grid
+from pathfinding.finder.a_star import AStarFinder
 
 class Bot:
     def __init__(self):
@@ -12,6 +16,7 @@ class Bot:
         """
         self.PlayerInfo = playerInfo
 
+
     def execute_turn(self, gameMap, visiblePlayers):
         """
         This is where you decide what action to take.
@@ -20,17 +25,41 @@ class Bot:
         """
 
         # Write your bot here. Use functions from aiHelper to instantiate your actions.
-        if gameMap.getTileAt(self, Point(self.PlayerInfo.Position.getX() + 1, self.Position.getY())) == 4:
-            create_collect_action(Point(1, 0))
-        elif gameMap.getTileAt(self, Point(self.PlayerInfo.Position.getX(), self.Position.getY() + 1)) == 4:
-            create_collect_action(Point(0, 1))
-        elif gameMap.getTileAt(self, Point(self.PlayerInfo.Position.getX() - 1, self.Position.getY())) == 4:
-            create_collect_action(Point(-1, 0))
-        elif gameMap.getTileAt(self, Point(self.PlayerInfo.Position.getX(), self.Position.getY() - 1)) == 4:
-            create_collect_action(Point(0, -1))
+
+        # Analyse de la zone 5x5
+        matrixInit = np.zeros([5,5])
+
+        for i in range(5):
+            for j in range(5):
+                matrixInit[i][j] = gameMap.getTileAt(self, Point(self.PlayerInfo.Position.getX() + i, self.PlayerInfo.Position.getY() + j))
+                if gameMap.getTileAt(self, Point(self.PlayerInfo.Position.getX() + i, self.PlayerInfo.Position.getY() + j)) == 4:
+                    StorageHelper.write("positionCible", Point(self.PlayerInfo.Position.getX() + i, self.PlayerInfo.Position.getY() + j))
+
+        # Check wether there is a positionCible
+        if StorageHelper.read("positionCible") is None:
+            return create_move_action(Point(0,-1))
         else:
-            create_move_action(Point(0, 1))
-        return create_move_action(Point(1, 0))
+            matrixPath = np.zeros([5,5])
+            for i in range(5):
+                for j in range(5):
+                    if matrixInit[i][j] == 0 or matrixInit[i][j] == 4:
+                        matrixPath[i][j] = 1
+                    else:
+                        matrixPath[i][j] = 0
+
+            grid = Grid(matrix = matrixPath)
+            start = grid.node(0,0)
+            end = grid.node(StorageHelper.read("positionCible").getX(), StorageHelper.read("positionCible").getY())
+
+            finder = AStarFinder(diagonal_movement=DiagonalMovement.never)
+            path, runs = finder.find_path(start, end, grid)
+
+            for y in range(len(self.nodes)):
+                for x in range(len(self.nodes[y])):
+                    node = self.nodes[y][x]
+                    if path and ((node.x, node.y) in path or node in path):
+                        return create_move_action(Point(node.x, node.y))
+
 
     def after_turn(self):
         """

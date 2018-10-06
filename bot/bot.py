@@ -22,8 +22,8 @@ class Bot:
             :param gameMap: The gamemap.
             :param visiblePlayers:  The list of visible players.
         """
-
-    def plusProche(self, arrayDirection):
+        return create_move_action(Point(0,-1))
+    '''def plusProche(self, arrayDirection):
         closestPoint = Point(-1, -1)
         closestDistance = 1000
         for i in arrayDirection:
@@ -63,7 +63,7 @@ class Bot:
             for x in range(len(self.nodes[y])):
                 node = self.nodes[y][x]
                 if path and ((node.x, node.y) in path or node in path):
-                    return create_move_action(Point(node.x, node.y))
+                    return create_move_action(Point(node.x, node.y))'''
 
     def after_turn(self):
         """
